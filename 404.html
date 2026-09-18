@@ -1,0 +1,6 @@
+<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Banana</title></head>
+<body><script>
+const p=location.pathname.replace(/^\/+|\/+$/g,'');
+if(p==='login'||p==='home'||p==='') location.replace(location.origin+location.pathname.replace(/[^/]*$/,'')+(p==='home'?'app.html':'login.html'));
+else location.replace(location.origin+location.pathname.replace(/[^/]*$/,'')+'login.html');
+</script></body></html>

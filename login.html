@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ورود | Banana</title><link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page">
+<div class="auth-wrap">
+  <div class="brand"><div class="brand-mark">🍌</div><b>Banana</b><span>Messenger</span></div>
+  <section class="auth-card">
+    <div class="auth-tabs"><button id="tabLogin" class="active">ورود</button><button id="tabSignup">ثبت‌نام</button></div>
+    <h1 id="authTitle">خوش آمدی 👋</h1><p id="authSub">برای ادامه وارد حساب خودت شو.</p>
+    <form id="authForm">
+      <label>نام کاربری</label><input id="username" autocomplete="username" maxlength="24" required placeholder="مثلاً mmd">
+      <label id="emailLabel">ایمیل</label><input id="email" type="email" autocomplete="email" required placeholder="you@example.com">
+      <label>رمز عبور</label><input id="password" type="password" minlength="8" autocomplete="current-password" required placeholder="حداقل ۸ کاراکتر">
+      <div id="captchaBox" class="captcha"><div><span id="captchaQ"></span><button type="button" id="refreshCaptcha" class="icon-btn" aria-label="کپچای جدید">↻</button></div><input id="captcha" inputmode="numeric" placeholder="پاسخ را وارد کن" required></div>
+      <button class="primary wide" id="authBtn">ورود</button>
+      <div id="authMsg" class="msg"></div>
+    </form>
+    <div class="small-note">حساب‌ها و اطلاعات در Supabase ذخیره می‌شوند.</div>
+  </section>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+</body></html>

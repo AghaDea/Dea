@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Banana Messenger</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app" class="app hidden">
+<header class="topbar">
+  <div class="top-brand"><span class="banana">🍌</span><b>Banana</b></div>
+  <div class="top-actions">
+    <button class="icon-btn" data-page="search" title="جستجو">⌕</button>
+    <button class="icon-btn bell" data-page="notifications" title="اعلان‌ها">♢<i id="notifDot"></i></button>
+    <button class="avatar mini" data-page="profile" id="topAvatar">?</button>
+  </div>
+</header>
+<main id="content"></main>
+<nav class="bottom-nav">
+ <button data-page="chats">▣<span>چت‌ها</span></button>
+ <button data-page="search">⌕<span>جستجو</span></button>
+ <button data-page="profile">●<span>پروفایل</span></button>
+ <button data-page="settings">⚙<span>تنظیمات</span></button>
+ <button data-page="admin" id="adminNav" class="hidden">♟<span>ادمین</span></button>
+</nav>
+</div>
+<div id="toast"></div>
+<div id="modal" class="modal hidden"><div class="modal-box" id="modalBox"></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body></html>
