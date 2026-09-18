@@ -1,1 +1,1303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Guessino · Login</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
 
+:root{
+  --bg:#000000;
+  --bg-elev:#16181c;
+  --bg-card:#16181c;
+  --border:#2f3336;
+  --border-soft:#1e2226;
+  --text:#e7e9ea;
+  --text-dim:#71767b;
+  --accent:#1d9bf0;
+  --accent-hover:#1a8cd8;
+  --accent-dim:#134d6f;
+  --green:#00ba7c;
+  --orange:#ff8c42;
+  --red:#f4212e;
+  --gold:#f7c948;
+  --purple:#a855f7;
+  --radius:16px;
+  --radius-sm:12px;
+  --shadow:0 8px 32px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,sans-serif;
+  min-height:100vh;display:flex;flex-direction:column;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;cursor:pointer;}
+input,textarea{font-family:inherit;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-thumb{background:#333;border-radius:10px;}
+.hidden{display:none !important;}
+
+#app{flex:1;display:flex;flex-direction:column;max-width:520px;margin:0 auto;width:100%;position:relative;}
+header.topbar{
+  position:sticky;top:0;z-index:5;background:rgba(0,0,0,.88);backdrop-filter:blur(14px);
+  display:flex;align-items:center;justify-content:space-between;padding:12px 16px;
+  border-bottom:1px solid var(--border);
+}
+header.topbar .brand{font-weight:800;font-size:18px;display:flex;align-items:center;gap:8px;letter-spacing:-.3px;}
+header.topbar .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);}
+main{flex:1;padding:14px;padding-bottom:92px;}
+
+nav.tabbar{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;
+  display:flex;background:rgba(0,0,0,.92);backdrop-filter:blur(14px);
+  border-top:1px solid var(--border);z-index:10;padding-bottom:env(safe-area-inset-bottom);
+}
+nav.tabbar button{
+  flex:1;background:none;border:none;color:var(--text-dim);padding:10px 0 8px;
+  display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;font-weight:600;
+  transition:color .15s;
+}
+nav.tabbar button .ic{font-size:20px;line-height:1.2;}
+nav.tabbar button.active{color:var(--text);}
+nav.tabbar button.active .ic{color:var(--accent);}
+
+/* auth */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.auth-card{width:100%;max-width:380px;}
+.auth-logo{font-size:36px;font-weight:900;text-align:center;margin-bottom:4px;letter-spacing:-1px;}
+.auth-logo span{color:var(--accent);}
+.auth-sub{text-align:center;color:var(--text-dim);margin-bottom:26px;font-size:14px;}
+.field{margin-bottom:13px;}
+.field label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:5px;font-weight:600;}
+.field input,.field textarea{
+  width:100%;background:var(--bg-elev);border:1px solid var(--border);color:var(--text);
+  padding:12px 14px;border-radius:12px;font-size:15px;outline:none;transition:border-color .15s;
+}
+.field input:focus,.field textarea:focus{border-color:var(--accent);}
+.btn{width:100%;padding:13px;border-radius:999px;border:none;font-weight:700;font-size:15px;transition:opacity .15s,transform .1s;}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:disabled{opacity:.45;}
+.btn-ghost{background:transparent;color:var(--accent);border:1px solid var(--border);}
+.btn-danger{background:var(--red);color:#fff;}
+.switch-line{text-align:center;margin-top:16px;font-size:13px;color:var(--text-dim);}
+.switch-line a{color:var(--accent);cursor:pointer;font-weight:600;text-decoration:none;}
+.err-msg{background:rgba(244,33,46,.1);color:var(--red);border:1px solid rgba(244,33,46,.28);padding:10px 12px;border-radius:10px;font-size:13px;margin-bottom:12px;}
+
+/* ban */
+.ban-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;}
+.ban-card{max-width:380px;}
+.ban-card .icon{font-size:52px;margin-bottom:12px;}
+.ban-card h2{color:var(--red);margin:0 0 8px;font-size:20px;}
+.ban-card p{color:var(--text-dim);line-height:1.7;font-size:14px;}
+.ban-card .box{background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:14px;margin:14px 0;text-align:left;}
+.ban-card .box div{margin-bottom:6px;font-size:13px;}
+.ban-card .box b{color:var(--text);}
+
+/* cards & game */
+.card{background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+.game-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#7856ff);object-fit:cover;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;overflow:hidden;}
+.avatar img{width:100%;height:100%;object-fit:cover;}
+.avatar.sm{width:34px;height:34px;font-size:13px;}
+.avatar.lg{width:84px;height:84px;font-size:28px;}
+.avatar.online::after{content:'';position:absolute;bottom:1px;right:1px;width:10px;height:10px;background:var(--green);border:2px solid var(--bg-elev);border-radius:50%;}
+.name-block .uname{font-weight:800;font-size:15px;display:block;line-height:1.35;}
+.name-block .lvl{font-size:12px;color:var(--text-dim);}
+.xp-bar-wrap{margin-top:5px;}
+.xp-bar{height:6px;border-radius:6px;background:#22282c;overflow:hidden;}
+.xp-bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#7856ff);transition:width .4s ease;}
+.xp-text{font-size:11px;color:var(--text-dim);margin-top:3px;}
+
+.mode-tabs{display:flex;gap:6px;justify-content:center;margin-bottom:10px;flex-wrap:wrap;}
+.mode-tabs button{
+  background:var(--bg);border:1px solid var(--border);color:var(--text-dim);
+  border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;transition:all .15s;
+}
+.mode-tabs button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.range-hint{text-align:center;color:var(--text-dim);font-size:12.5px;margin-bottom:10px;}
+.streak-pill{
+  display:inline-flex;align-items:center;gap:4px;background:rgba(255,140,66,.12);color:var(--orange);
+  font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;margin-bottom:8px;
+}
+.guess-display{
+  background:var(--bg);border:2px solid var(--border);border-radius:14px;text-align:center;
+  font-size:32px;font-weight:800;padding:14px 8px;letter-spacing:1.5px;margin-bottom:12px;min-height:62px;
+  display:flex;align-items:center;justify-content:center;color:var(--accent);transition:border-color .2s;
+}
+.guess-display.empty{color:var(--text-dim);font-size:15px;font-weight:500;letter-spacing:0;}
+.guess-display.win-flash{border-color:var(--green);box-shadow:0 0 20px rgba(0,186,124,.25);}
+.result-label{
+  text-align:center;font-weight:800;font-size:18px;padding:12px;border-radius:12px;margin-bottom:12px;
+  display:none;animation:fadeIn .25s ease;
+}
+.result-label.show{display:block;}
+.result-label.higher{background:rgba(255,140,66,.12);color:var(--orange);}
+.result-label.lower{background:rgba(0,186,124,.12);color:var(--green);}
+.result-label.win{background:rgba(29,155,240,.15);color:var(--accent);}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px;}
+.keypad button{
+  background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:12px;
+  padding:15px 0;font-size:20px;font-weight:700;transition:background .1s;
+}
+.keypad button:active{background:#1a1f24;}
+.keypad button.key-clear{font-size:13px;color:var(--text-dim);}
+.keypad button.key-set{background:#0F1317;color:#fff;font-size:15px;}
+
+.guess-history{
+  max-height:38px;overflow-y:auto;margin-bottom:10px;font-size:12px;
+  border:1px solid var(--border);border-radius:10px;padding:6px 8px;background:var(--bg);
+}
+.guess-history:empty{display:none;}
+.guess-history .gh-row{display:flex;justify-content:space-between;padding:3px 0;color:var(--text-dim);}
+.guess-history .gh-row b{color:var(--text);}
+
+.stats-mini{display:flex;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+.stats-mini div{text-align:center;flex:1;}
+.stats-mini b{display:block;font-size:17px;}
+.stats-mini span{font-size:10.5px;color:var(--text-dim);}
+
+/* leaderboard */
+.lb-tabs{display:flex;background:var(--bg-elev);border-radius:999px;padding:3px;margin-bottom:12px;border:1px solid var(--border);}
+.lb-tabs button{flex:1;background:none;border:none;color:var(--text-dim);padding:8px 0;border-radius:999px;font-weight:700;font-size:12.5px;}
+.lb-tabs button.active{background:var(--accent);color:#fff;}
+.search-wrap{margin-bottom:10px;}
+.search-wrap input{width:100%;background:var(--bg-elev);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:999px;font-size:14px;outline:none;}
+.search-wrap input:focus{border-color:var(--accent);}
+.lb-row{display:flex;align-items:center;gap:10px;padding:10px 6px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+.lb-row:hover{background:#0f1317;}
+.lb-rank{width:24px;text-align:center;font-weight:800;color:var(--text-dim);font-size:13px;flex-shrink:0;}
+.lb-rank.top1{color:var(--gold);}
+.lb-rank.top2{color:#c7c7c7;}
+.lb-rank.top3{color:#cd7f32;}
+.lb-name{flex:1;min-width:0;}
+.lb-name .u{font-weight:700;font-size:13.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.crown-tag{color:var(--gold);font-size:11px;font-weight:800;}
+.lb-stats{text-align:left;font-size:11px;color:var(--text-dim);flex-shrink:0;line-height:1.35;}
+.lb-stats b{color:var(--text);font-size:13px;}
+.empty-note{text-align:center;color:var(--text-dim);padding:36px 10px;font-size:13px;}
+.my-rank-card{background:linear-gradient(135deg,rgba(29,155,240,.12),rgba(120,86,255,.08));border:1px solid rgba(29,155,240,.35);border-radius:12px;padding:11px 13px;margin-bottom:10px;font-size:13px;}
+
+/* profile */
+.profile-hero{text-align:center;padding:8px 0 16px;}
+.profile-hero .avatar{margin:0 auto 10px;position:relative;}
+.upload-btn{display:inline-block;margin-top:6px;font-size:12px;color:var(--accent);cursor:pointer;font-weight:600;}
+.profile-hero h3{margin:4px 0 2px;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;font-size:18px;}
+.admin-badge{background:var(--accent);color:#fff;font-size:10px;padding:2px 8px;border-radius:999px;font-weight:800;}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0;}
+.stat-grid .box{background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:11px 5px;text-align:center;}
+.stat-grid .box b{display:block;font-size:17px;}
+.stat-grid .box span{font-size:10px;color:var(--text-dim);line-height:1.3;}
+.section-title{font-size:12px;color:var(--text-dim);margin:18px 0 8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.ach-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px;}
+.ach-item{background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:10px;display:flex;gap:8px;align-items:center;}
+.ach-item.locked{opacity:.45;}
+.ach-item .ach-ic{font-size:22px;flex-shrink:0;}
+.ach-item .ach-name{font-size:12px;font-weight:700;}
+.ach-item .ach-desc{font-size:10px;color:var(--text-dim);}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal-box{background:var(--bg-elev);border:1px solid var(--border);border-radius:18px;width:100%;max-width:400px;max-height:88vh;overflow-y:auto;padding:18px;position:relative;box-shadow:var(--shadow);}
+.modal-close{position:absolute;top:12px;left:12px;width:30px;height:30px;border-radius:50%;background:#202327;border:none;color:var(--text);font-size:15px;display:flex;align-items:center;justify-content:center;}
+.modal-box h3{text-align:center;margin:2px 0 14px;font-size:17px;}
+.detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;gap:10px;}
+.detail-row span:first-child{color:var(--text-dim);flex-shrink:0;}
+.detail-row span:last-child{font-weight:700;text-align:right;}
+.ban-actions{display:flex;gap:8px;margin-top:14px;}
+.ban-actions button{flex:1;padding:10px;border-radius:10px;border:none;font-weight:700;font-size:12px;color:#fff;}
+.btn-ban-device{background:#6b2fb3;}
+.btn-ban-normal{background:var(--red);}
+.btn-unban{background:var(--green);}
+.mini-form{margin-top:12px;border-top:1px dashed var(--border);padding-top:12px;}
+.mini-form input,.mini-form textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px;border-radius:8px;margin-bottom:7px;font-size:13px;}
+
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#202327;color:var(--text);padding:11px 18px;border-radius:999px;font-size:13px;z-index:100;box-shadow:0 4px 24px rgba(0,0,0,.5);opacity:0;transition:opacity .25s;max-width:90%;text-align:center;pointer-events:none;}
+.toast.show{opacity:1;}
+
+.setup-warning{background:#3a1f00;border:1px solid #7a4a00;color:#ffb84d;padding:14px;border-radius:12px;font-size:12.5px;line-height:1.7;margin:16px;text-align:center;}
+
+/* chat */
+.chat-convo{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column;max-width:520px;margin:0 auto;}
+.chat-convo-header{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,.92);flex-shrink:0;}
+.chat-back{background:none;border:none;color:var(--text);font-size:20px;padding:4px 6px;}
+.convo-name{font-weight:700;font-size:15px;}
+.chat-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;}
+.msg{max-width:78%;padding:9px 12px;border-radius:18px;position:relative;font-size:14.5px;line-height:1.45;word-wrap:break-word;overflow-wrap:anywhere;box-shadow:0 1px 2px rgba(0,0,0,.1);}
+.msg.mine{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:6px;}
+.msg.theirs{align-self:flex-start;background:var(--bg-elev);color:var(--text);border:1px solid var(--border);border-bottom-left-radius:6px;}
+.msg.theirs .msg-text{color:var(--text);}
+.msg.theirs .msg-actions{color:var(--text-dim);}
+.msg.mine .msg-actions{color:rgba(255,255,255,.85);}
+.chat-messages{background:var(--bg);padding:12px 14px;}
+.chat-convo-header{background:rgba(0,0,0,.88);}
+.chat-input-row{background:rgba(0,0,0,.88);}
+#pageChat .lb-row{padding:12px 16px;}
+#pageChat .avatar.sm{border-radius:50%;}
+.msg-quote{background:rgba(0,0,0,.22);border-left:3px solid rgba(255,255,255,.65);padding:4px 7px;border-radius:7px;margin-bottom:5px;font-size:12px;opacity:.9;}
+.msg-img{max-width:100%;border-radius:10px;margin-bottom:5px;display:block;}
+.msg-text{white-space:pre-wrap;}
+.msg-actions{display:flex;gap:10px;margin-top:3px;opacity:.85;font-size:11px;cursor:pointer;}
+.reply-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 12px;background:var(--bg-elev);border-top:1px solid var(--border);flex-shrink:0;}
+.reply-bar-label{font-size:11px;color:var(--accent);font-weight:700;margin-bottom:1px;}
+.reply-bar-text{font-size:12px;color:var(--text-dim);}
+.reply-bar button{background:none;border:none;color:var(--text-dim);font-size:16px;}
+.chat-input-row{display:flex;align-items:center;gap:8px;padding:9px 12px;border-top:1px solid var(--border);background:rgba(0,0,0,.92);flex-shrink:0;}
+.chat-icon-btn{font-size:20px;cursor:pointer;}
+.chat-input-row input[type=text]{flex:1;background:var(--bg-elev);border:1px solid var(--border);color:var(--text);padding:10px 13px;border-radius:999px;font-size:14px;outline:none;}
+.chat-input-row input[type=text]:focus{border-color:var(--accent);}
+.chat-send-btn{background:var(--accent);color:#fff;border:none;width:38px;height:38px;border-radius:50%;font-size:15px;flex-shrink:0;}
+.unread-badge{
+  background:var(--accent);color:#fff;font-size:11px;font-weight:800;min-width:20px;height:20px;
+  padding:0 6px;border-radius:999px;display:flex;align-items:center;justify-content:center;
+  margin-inline-start:auto;flex-shrink:0;
+}
+.unread-badge.hide{display:none;}
+.online-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:4px;vertical-align:middle;}
+.online-dot.off{background:#555;}
+
+/* loading */
+.loading-wrap{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.loading-wrap .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-wrap .loading-text{color:var(--text-dim);font-size:14px;font-weight:600;}
+.inline-loading{text-align:center;color:var(--text-dim);padding:32px 10px;font-size:13px;}
+.inline-loading .dot{display:inline-block;animation:blink 1.2s infinite;}
+.inline-loading .dot:nth-child(2){animation-delay:.2s;}
+.inline-loading .dot:nth-child(3){animation-delay:.4s;}
+@keyframes blink{0%,80%,100%{opacity:.2;}40%{opacity:1;}}
+
+/* support */
+.support-status{display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;margin-left:5px;}
+.support-status.open{background:rgba(29,155,240,.15);color:var(--accent);}
+.support-status.active{background:rgba(0,186,124,.15);color:var(--green);}
+.support-status.closed,.support-status.rejected{background:rgba(244,33,46,.12);color:var(--red);}
+.support-ticket-row{padding:11px 9px;border-bottom:1px solid var(--border);cursor:pointer;}
+.support-ticket-row:hover{background:#0f1317;}
+.support-ticket-row .t-title{font-weight:700;font-size:13.5px;}
+.support-ticket-row .t-meta{font-size:11px;color:var(--text-dim);margin-top:3px;}
+.support-msg{max-width:86%;padding:8px 11px;border-radius:12px;font-size:13px;line-height:1.45;margin-bottom:7px;word-wrap:break-word;}
+.support-msg.user{background:var(--bg);border:1px solid var(--border);align-self:flex-start;}
+.support-msg.admin{background:rgba(29,155,240,.15);border:1px solid rgba(29,155,240,.3);align-self:flex-end;}
+.support-msg .who{font-size:10px;color:var(--text-dim);margin-bottom:2px;font-weight:700;}
+#supportMsgList{display:flex;flex-direction:column;gap:3px;max-height:260px;overflow-y:auto;padding:6px 0;}
+.support-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-left:4px;vertical-align:middle;}
+.support-dot.hide{display:none !important;}
+.tab-badge{background:var(--red);color:#fff;font-size:10px;font-weight:800;min-width:16px;height:16px;border-radius:999px;padding:0 4px;display:inline-flex;align-items:center;justify-content:center;margin-left:3px;vertical-align:middle;}
+.tab-badge.hide{display:none !important;}
+.tik-badge{display:inline-flex;align-items:center;justify-content:center;margin-inline-start:3px;vertical-align:middle;line-height:0;pointer-events:none;}
+.tik-badge img{width:15px;height:15px;display:block;border-radius:50%;pointer-events:none;-webkit-user-drag:none;}
+.confirm-actions{display:flex;gap:8px;margin-top:14px;}
+.confirm-actions button{flex:1;padding:11px;border-radius:10px;border:none;font-weight:700;font-size:13px;color:#fff;}
+
+/* Admin dashboard */
+.admin-dash{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px;}
+.admin-stat{background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;}
+.admin-stat b{display:block;font-size:20px;color:var(--accent);}
+.admin-stat span{font-size:10.5px;color:var(--text-dim);}
+.admin-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.admin-actions button{padding:11px 8px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-weight:700;font-size:12px;text-align:center;}
+.admin-actions button:active{background:#1a1f24;}
+
+/* announcement banner */
+.ann-banner{background:linear-gradient(90deg,rgba(29,155,240,.18),rgba(168,85,247,.12));border:1px solid rgba(29,155,240,.3);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:12.5px;line-height:1.5;}
+.ann-banner strong{color:var(--accent);}
+
+/* level title */
+.level-title{font-size:11px;color:var(--purple);font-weight:700;margin-top:1px;}
+
+/* ---- X / Twitter-like polish ---- */
+body{background:#000;color:var(--text);}
+#app{border-left:1px solid var(--border);border-right:1px solid var(--border);}
+@media(max-width:540px){#app{border:none;}}
+header.topbar{
+  background:rgba(0,0,0,.65);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);padding:0 16px;height:53px;
+}
+header.topbar .brand{font-size:17px;font-weight:700;letter-spacing:0;}
+header.topbar .brand .dot{width:8px;height:8px;box-shadow:0 0 8px var(--accent);}
+main{padding:0 0 88px;}
+.card{
+  background:transparent;border:none;border-bottom:1px solid var(--border);
+  border-radius:0;padding:14px 16px;margin-bottom:0;
+}
+.card + .card{border-top:none;}
+.lb-row{
+  padding:12px 16px;border-bottom:1px solid var(--border);margin:0;
+  transition:background .12s;
+}
+.lb-row:hover{background:rgba(255,255,255,.03);}
+.avatar{background:linear-gradient(135deg,#1d9bf0,#7856ff);}
+.btn-primary{background:var(--accent);border-radius:999px;font-weight:700;}
+.btn-primary:hover{background:var(--accent-hover);}
+.btn-ghost{
+  border:1px solid var(--border);color:var(--text);border-radius:999px;
+  background:transparent;font-weight:700;
+}
+.btn-ghost:hover{background:rgba(255,255,255,.06);}
+nav.tabbar{
+  background:rgba(0,0,0,.75);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);height:auto;padding:2px 0 env(safe-area-inset-bottom);
+}
+nav.tabbar button{padding:8px 0 6px;position:relative;}
+nav.tabbar button.active{color:var(--text);}
+nav.tabbar button.active .ic{color:var(--text);}
+.guess-display{
+  background:#000;border:1px solid var(--border);border-radius:16px;
+  font-size:28px;padding:18px 12px;
+}
+.keypad button{
+  background:#000;border:1px solid var(--border);border-radius:999px;
+  padding:14px 0;font-size:18px;font-weight:700;
+}
+.keypad button:hover{background:rgba(255,255,255,.04);}
+.keypad button.key-set{background:var(--accent);border-color:var(--accent);color:#fff;}
+.keypad button.key-set:hover{background:var(--accent-hover);}
+.mode-tabs button{
+  border-radius:999px;border:1px solid var(--border);padding:7px 14px;
+  font-size:13px;background:transparent;
+}
+.mode-tabs button.active{background:var(--text);color:#000;border-color:var(--text);}
+.lb-tabs{background:transparent;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:0;margin:0 0 0;}
+.lb-tabs button{
+  border-radius:0;padding:14px 0;font-size:14px;font-weight:700;position:relative;
+  background:transparent;color:var(--text-dim);
+}
+.lb-tabs button.active{color:var(--text);background:transparent;}
+.lb-tabs button.active::after{
+  content:'';position:absolute;left:25%;right:25%;bottom:0;height:4px;
+  background:var(--accent);border-radius:4px 4px 0 0;
+}
+.search-wrap{padding:8px 16px;border-bottom:1px solid var(--border);margin:0;}
+.search-wrap input{
+  background:#202327;border:1px solid transparent;border-radius:999px;
+  padding:11px 16px;font-size:15px;
+}
+.search-wrap input:focus{border-color:var(--accent);background:#000;}
+.my-rank-card{
+  margin:10px 16px;border-radius:16px;border:1px solid var(--border);
+  background:rgba(29,155,240,.06);
+}
+.profile-hero{
+  padding:20px 16px 18px;border-bottom:1px solid var(--border);
+  text-align:center !important;
+}
+.profile-hero .avatar,
+.profile-hero .avatar.lg{
+  margin:0 auto 12px !important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.profile-hero h3{
+  justify-content:center !important;
+  text-align:center;
+  width:100%;
+  display:block !important;
+}
+.profile-hero .upload-btn{display:inline-block;}
+.profile-hero .level-title{text-align:center;}
+.stat-grid{padding:0 12px;margin:12px 0;}
+.stat-grid .box{
+  background:#000;border:1px solid var(--border);border-radius:16px;padding:14px 8px;
+}
+.section-title{
+  padding:14px 16px 8px;margin:0;
+  text-transform:none;letter-spacing:0;
+  color:var(--text);font-weight:800;font-size:17px;
+  border-top:1px solid var(--border);
+}
+.field{padding:0 16px;margin-bottom:12px;}
+#pageProfile .btn, #pageProfile .btn-ghost, #pageProfile .btn-primary{
+  margin:0 16px 10px;width:calc(100% - 32px);
+}
+#pageProfile .card{border-bottom:1px solid var(--border);}
+#accountDevicesList, #profRecentRounds, #profDevices{
+  text-align:left;
+}
+#pageProfile > .section-title:first-of-type{border-top:none;}
+.modal-box{
+  background:#16181c;border:1px solid var(--border);border-radius:16px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.04), var(--shadow);
+}
+.modal-close{background:transparent;font-size:18px;left:auto;right:12px;}
+.toast{background:#1d9bf0;color:#fff;font-weight:600;border-radius:8px;bottom:90px;}
+.ann-banner{
+  margin:0;border-radius:0;border:none;border-bottom:1px solid var(--border);
+  background:rgba(29,155,240,.08);padding:12px 16px;
+}
+.game-header{padding:0;}
+.range-hint{color:var(--text-dim);}
+.admin-dash{padding:12px 16px;gap:10px;}
+.admin-stat{
+  background:#000;border:1px solid var(--border);border-radius:16px;padding:14px;
+}
+.admin-stat b{color:var(--text);font-size:22px;}
+.admin-actions{padding:0 16px 12px;gap:10px;}
+.admin-actions button{
+  background:#000;border:1px solid var(--border);border-radius:999px;
+  padding:12px 10px;font-weight:700;color:var(--text);
+}
+.admin-actions button:hover{background:rgba(255,255,255,.04);border-color:var(--text-dim);}
+.support-ticket-row{padding:14px 16px;}
+.device-row:last-child{border-bottom:none !important;}
+.ach-grid{padding:0 16px 12px;}
+.ach-item{border-radius:16px;background:#000;}
+.auth-card .field input{border-radius:8px;background:#000;border-color:var(--border);}
+.auth-logo{letter-spacing:-1.5px;}
+.page-pad{padding:0 16px;}
+.audit-row{
+  padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;
+}
+.audit-row .a-act{font-weight:700;color:var(--accent);}
+.audit-row .a-meta{font-size:11px;color:var(--text-dim);margin-top:3px;line-height:1.45;}
+#pageGame > .card:first-child{border-top:none;}
+
+
+/* Scrollable panels */
+#accountDevicesList{
+  max-height:220px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  border:1px solid var(--border);border-radius:12px;padding:4px 10px;background:#000;
+}
+#profRecentRounds{
+  max-height:200px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  border:1px solid var(--border);border-radius:12px;padding:4px 10px;background:#000;
+}
+#adminRecentUsers{
+  max-height:280px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  border-top:1px solid var(--border);
+}
+#auditLogList{
+  max-height:280px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  border-top:1px solid var(--border);margin-bottom:20px;
+}
+#modalAchievements{max-height:160px;overflow-y:auto;margin-top:10px;border:1px solid var(--border);border-radius:12px;padding:8px;background:var(--bg);}
+
+
+/* Level title colors */
+.level-title{font-weight:800;font-size:12px;letter-spacing:.2px;}
+.lt-rookie{color:#8b98a5;}
+.lt-skilled{
+  background:linear-gradient(90deg,#34d399,#2dd4bf);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  font-weight:900;text-shadow:0 0 18px rgba(45,212,191,.25);
+}
+.lt-pro{color:#60a5fa;font-weight:900;}
+.lt-expert{color:#a78bfa;font-weight:900;}
+.lt-master{color:#f472b6;font-weight:900;}
+.lt-legend{
+  background:linear-gradient(90deg,#fbbf24,#f59e0b,#ef4444);
+  -webkit-background-clip:text;background-clip:text;color:transparent;font-weight:900;
+}
+/* Owner badge */
+.owner-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  background:linear-gradient(135deg,#7c3aed,#db2777);
+  color:#fff !important;font-size:10px;padding:3px 9px;border-radius:999px;
+  font-weight:800;letter-spacing:.3px;
+  box-shadow:0 0 12px rgba(124,58,237,.45);
+  border:none;
+}
+
+
+/* ---- Light theme (polished) ---- */
+html[data-theme="light"]{
+  --bg:#f0f2f5;
+  --bg-elev:#ffffff;
+  --bg-card:#ffffff;
+  --border:#d0d7de;
+  --border-soft:#e8ecf0;
+  --text:#1a1a1a;
+  --text-dim:#5c6b7a;
+  --accent:#0b7dda;
+  --accent-hover:#0969c3;
+  --accent-dim:#d6ebfa;
+  --green:#0d9f6e;
+  --orange:#e67e22;
+  --red:#e74c3c;
+  --gold:#c9a227;
+  --purple:#7c5cbf;
+  --shadow:0 4px 24px rgba(0,0,0,.08);
+}
+html[data-theme="light"] body{background:var(--bg);color:var(--text);}
+html[data-theme="light"] #app{border-color:var(--border);background:#fff;}
+html[data-theme="light"] header.topbar,
+html[data-theme="light"] nav.tabbar{
+  background:rgba(255,255,255,.92);
+  border-color:var(--border);
+}
+html[data-theme="light"] .card,
+html[data-theme="light"] .lb-row,
+html[data-theme="light"] .stat-grid .box,
+html[data-theme="light"] .admin-stat,
+html[data-theme="light"] .ach-item,
+html[data-theme="light"] .clan-card,
+html[data-theme="light"] .modal-box{
+  background:#fff;
+  border-color:var(--border);
+  color:var(--text);
+}
+html[data-theme="light"] .guess-display,
+html[data-theme="light"] .keypad button,
+html[data-theme="light"] .search-wrap input,
+html[data-theme="light"] #accountDevicesList,
+html[data-theme="light"] #profRecentRounds,
+html[data-theme="light"] .field input,
+html[data-theme="light"] .field textarea,
+html[data-theme="light"] .chat-input-row input[type=text]{
+  background:#f7f9fb;
+  border-color:var(--border);
+  color:var(--text);
+}
+html[data-theme="light"] .mode-tabs button{
+  background:#fff;border-color:var(--border);color:var(--text-dim);
+}
+html[data-theme="light"] .mode-tabs button.active{
+  background:var(--accent);color:#fff;border-color:var(--accent);
+}
+html[data-theme="light"] .keypad button.key-set{background:var(--accent);border-color:var(--accent);color:#fff;}
+html[data-theme="light"] .keypad button:hover{background:#eef2f6;}
+html[data-theme="light"] .toast{background:var(--accent);color:#fff;}
+html[data-theme="light"] .chat-convo,
+html[data-theme="light"] .chat-convo-header,
+html[data-theme="light"] .chat-input-row{background:#fff;border-color:var(--border);}
+html[data-theme="light"] .msg.mine{background:var(--green);color:#fff;}
+html[data-theme="light"] .msg.theirs{background:var(--accent);color:#fff;}
+html[data-theme="light"] .lb-tabs button.active{color:var(--text);}
+html[data-theme="light"] .lb-tabs button.active::after{background:var(--accent);}
+html[data-theme="light"] .section-title{color:var(--text);border-color:var(--border);}
+html[data-theme="light"] .ann-banner{background:rgba(11,125,218,.08);border-color:var(--border);}
+html[data-theme="light"] .my-rank-card{background:rgba(11,125,218,.06);border-color:rgba(11,125,218,.25);}
+html[data-theme="light"] .support-ticket-row:hover,
+html[data-theme="light"] .lb-row:hover{background:#f5f7fa;}
+html[data-theme="light"] .btn-ghost{border-color:var(--border);color:var(--text);}
+html[data-theme="light"] .btn-ghost:hover{background:#f0f2f5;}
+html[data-theme="light"] .auth-card .field input{background:#fff;}
+html[data-theme="light"] .loading-wrap{background:var(--bg);}
+html[data-theme="light"] .notif-item{background:#fff;border-color:var(--border);}
+html[data-theme="light"] .notif-item.unread{background:#eef6fc;}
+html[data-theme="light"] .notif-panel{background:#fff;border-color:var(--border);}
+html[data-theme="light"] .notif-panel-header{background:#fff;border-color:var(--border);}
+html[data-theme="light"] .clan-members-scroll{background:#f7f9fb;border-color:var(--border);}
+html[data-theme="light"] .clan-stat-pill{background:#f7f9fb;border-color:var(--border);}
+html[data-theme="light"] .msg.mine{background:var(--accent);color:#fff;}
+html[data-theme="light"] .msg.theirs{background:#eef2f6;color:var(--text);border-color:var(--border);}
+html[data-theme="light"] .chat-convo-header,
+html[data-theme="light"] .chat-input-row{background:rgba(255,255,255,.95);}
+html[data-theme="light"] .chat-messages{background:var(--bg);}
+html[data-theme="light"] .keypad button,
+html[data-theme="light"] .guess-display{background:#fff;}
+html[data-theme="light"] #app{background:#fff;}
+html[data-theme="light"] main{background:#fff;}
+html[data-theme="light"] .lb-row{background:transparent;}
+html[data-theme="light"] nav.tabbar button{color:var(--text-dim);}
+html[data-theme="light"] nav.tabbar button.active{color:var(--text);}
+html[data-theme="light"] .keypad button{background:#fff;border-color:var(--border);color:var(--text);}
+html[data-theme="light"] .keypad button.key-clear{color:var(--text-dim);}
+html[data-theme="light"] .guess-display{background:#fff;border-color:var(--border);color:var(--accent);}
+html[data-theme="light"] .guess-display.empty{color:var(--text-dim);}
+html[data-theme="light"] .guess-history{background:#fff;border-color:var(--border);}
+html[data-theme="light"] .mode-tabs button{background:#fff;}
+html[data-theme="light"] .admin-actions button{background:#fff;color:var(--text);border-color:var(--border);}
+html[data-theme="light"] .theme-toggle-btn,
+html[data-theme="light"] .notif-btn{background:#fff;border-color:var(--border);color:var(--text);}
+html[data-theme="light"] #supportMenu{background:#fff;}
+html[data-theme="light"] .modal-box{background:#fff;}
+html[data-theme="light"] .field input,
+html[data-theme="light"] .field textarea,
+html[data-theme="light"] .mini-form input,
+html[data-theme="light"] .mini-form textarea{background:#fff;color:var(--text);border-color:var(--border);}
+html[data-theme="light"] .auth-card .field input{background:#fff;}
+html[data-theme="light"] .xp-bar{background:#e5e9ef;}
+html[data-theme="light"] body{background:#f0f2f5;}
+
+html[data-theme="light"] .reply-bar{background:#fff;}
+
+
+
+/* Notifications */
+.notif-btn{position:relative;width:auto;padding:5px 10px;font-size:15px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-weight:700;}
+.notif-badge{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:10px;font-weight:800;min-width:16px;height:16px;border-radius:999px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
+.notif-badge.hide{display:none;}
+.notif-panel{
+  position:fixed; top:56px; right:max(8px, calc(50% - 260px));
+  width:min(360px, calc(100vw - 16px)); max-height:min(70vh, calc(100vh - 72px));
+  overflow-y:auto; -webkit-overflow-scrolling:touch;
+  background:var(--bg-elev); border:1px solid var(--border); border-radius:14px;
+  z-index:90; box-shadow:var(--shadow); padding:6px 6px 10px;
+}
+.notif-panel-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 10px 10px; border-bottom:1px solid var(--border); margin-bottom:4px;
+  position:sticky; top:0; background:var(--bg-elev); z-index:1;
+}
+.notif-panel-header b{font-size:14px;}
+.notif-panel-header button{
+  background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;padding:4px 8px;
+}
+.notif-item{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;line-height:1.45;}
+.notif-item:last-child{border-bottom:none;}
+.notif-item.unread{background:rgba(29,155,240,.08);}
+.notif-item .n-title{font-weight:800;margin-bottom:2px;}
+.notif-item .n-body{color:var(--text-dim);font-size:12px;}
+.notif-item .n-actions{display:flex;gap:6px;margin-top:8px;}
+.notif-item .n-actions button{flex:1;padding:7px;border-radius:8px;border:none;font-weight:700;font-size:12px;color:#fff;cursor:pointer;}
+.notif-item .n-actions button:disabled{opacity:.5;pointer-events:none;}
+.notif-empty{text-align:center;padding:24px;color:var(--text-dim);font-size:13px;}
+.clan-stat-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;justify-content:center;}
+.clan-stat-pill{font-size:11px;padding:4px 9px;border-radius:999px;background:var(--bg);border:1px solid var(--border);color:var(--text-dim);}
+.clan-stat-pill b{color:var(--text);}
+.clan-members-scroll{
+  max-height:220px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  border:1px solid var(--border); border-radius:12px; padding:4px 10px; background:var(--bg);
+  margin-top:6px;
+}
+.clan-detail-hero{text-align:center;padding:4px 0 12px;border-bottom:1px solid var(--border);margin-bottom:10px;}
+
+
+/* Clan tag badge */
+.clan-tag{
+  display:inline;font-size:inherit;font-weight:800;letter-spacing:0;
+  padding:0;margin:0;border:none;border-radius:0;background:none !important;
+  line-height:inherit;vertical-align:baseline;white-space:nowrap;
+  max-width:none;text-shadow:none;
+}
+.clan-tag-sm{font-size:inherit;padding:0;}
+.clan-tag-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;letter-spacing:.3px;
+  padding:3px 8px;border-radius:8px;color:#fff;line-height:1.2;
+}
+.theme-toggle-btn{
+  width:auto;padding:5px 10px;font-size:14px;border-radius:999px;
+  border:1px solid var(--border);background:transparent;color:var(--text);
+  font-weight:700;cursor:pointer;
+}
+.clan-card{
+  background:var(--bg-elev);border:1px solid var(--border);border-radius:14px;
+  padding:14px;margin:8px 16px 12px;
+}
+.clan-member-row{
+  display:flex;align-items:center;gap:8px;padding:8px 0;
+  border-bottom:1px solid var(--border);font-size:13px;
+}
+.clan-member-row:last-child{border-bottom:none;}
+.clan-color-swatch{
+  width:22px;height:22px;border-radius:6px;border:1px solid var(--border);
+  display:inline-block;vertical-align:middle;cursor:pointer;
+}
+.clan-req-row{padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+
+
+/* ==== Theme polish v3 ==== */
+html[data-theme="light"] .modal-box,
+html[data-theme="light"] .modal-bg .modal-box{
+  background:#ffffff !important;
+  color:var(--text);
+  border-color:var(--border);
+}
+html[data-theme="light"] .detail-row{border-color:var(--border);color:var(--text);}
+html[data-theme="light"] .detail-row span:first-child{color:var(--text-dim);}
+html[data-theme="light"] .modal-close{background:#f0f2f5;color:var(--text);}
+html[data-theme="light"] #userModal .modal-box,
+html[data-theme="light"] #clanManageModal .modal-box,
+html[data-theme="light"] #clanCreateModal .modal-box,
+html[data-theme="light"] #clanBrowseModal .modal-box{
+  background:#fff !important;
+}
+html[data-theme="light"] .ban-actions button,
+html[data-theme="light"] .btn-ban-device,
+html[data-theme="light"] .btn-ban-normal{color:#fff;}
+html[data-theme="light"] .clan-members-scroll,
+html[data-theme="light"] .clan-stat-pill{background:#f4f6f8;border-color:var(--border);}
+html[data-theme="light"] .lb-tabs{border-color:var(--border);}
+html[data-theme="light"] .search-wrap{border-color:var(--border);}
+html[data-theme="light"] #pageChat .lb-row{background:transparent;}
+html[data-theme="light"] .auth-wrap,
+html[data-theme="light"] .ban-wrap,
+html[data-theme="light"] .loading-wrap{background:var(--bg);}
+html[data-theme="light"] .auth-card .field input{background:#fff !important;}
+html[data-theme="light"] .mini-form input,
+html[data-theme="light"] .mini-form textarea,
+html[data-theme="light"] input[type=datetime-local]{background:#fff;color:var(--text);border-color:var(--border);}
+html[data-theme="light"] #supportMenu,
+html[data-theme="light"] .notif-panel{background:#fff !important;border-color:var(--border);}
+html[data-theme="light"] .notif-panel-header{background:#fff !important;}
+
+/* Dark theme richer */
+html:not([data-theme="light"]){
+  --bg:#000000;
+  --bg-elev:#12151a;
+  --border:#2a2f36;
+  --text:#e7e9ea;
+  --text-dim:#8b98a5;
+}
+html:not([data-theme="light"]) .modal-box{
+  background:#16181c;
+  border-color:#2f3336;
+  box-shadow:0 12px 48px rgba(0,0,0,.55);
+}
+html:not([data-theme="light"]) .card,
+html:not([data-theme="light"]) .lb-row:hover{background:rgba(255,255,255,.03);}
+html:not([data-theme="light"]) .keypad button{background:#0a0c0f;border-color:#2a2f36;}
+html:not([data-theme="light"]) .guess-display{background:#0a0c0f;}
+html:not([data-theme="light"]) .msg.theirs{background:#1c2128;border-color:#2a2f36;}
+html:not([data-theme="light"]) .notif-panel{background:#16181c;}
+html:not([data-theme="light"]) .clan-members-scroll{background:#0a0c0f;}
+html:not([data-theme="light"]) .stat-grid .box,
+html:not([data-theme="light"]) .admin-stat{background:#0a0c0f;border-color:#2a2f36;}
+
+
+html[data-theme="light"] #modalAchievements,
+html[data-theme="light"] #modalAchievementsWrap,
+html[data-theme="light"] #modalDevices,
+html[data-theme="light"] #modalDevicesWrap{
+  background:transparent !important;
+  color:var(--text);
+}
+html[data-theme="light"] .ach-item,
+html[data-theme="light"] #modalAchievements .ach-item{
+  background:#f4f6f8 !important;
+  border-color:var(--border) !important;
+  color:var(--text) !important;
+}
+html[data-theme="light"] .ach-item .ach-name{color:var(--text) !important;}
+html[data-theme="light"] .ach-item .ach-desc{color:var(--text-dim) !important;}
+html[data-theme="light"] #modalAchievements{
+  background:#f7f9fb !important;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:8px;
+}
+html[data-theme="light"] .detail-row{border-bottom-color:var(--border);}
+html[data-theme="light"] #userModal .section-title{color:var(--text) !important;border-color:var(--border) !important;}
+
+
+body{min-height:100vh;}
+.auth-wrap{min-height:100vh;}
+
+/* Verify code (CAPTCHA) */
+.verify-wrap{margin:10px 0 3px}.verify-wrap>label{display:block;font-size:11px;color:var(--text-dim);margin:0 0 5px;font-weight:600}.puzzle-wrap{width:100%;user-select:none;-webkit-user-select:none;touch-action:none}.puzzle-board{position:relative;width:100%;height:118px;border-radius:10px;overflow:hidden;background:#111820;border:1px solid rgba(255,255,255,.09);box-shadow:0 4px 16px rgba(0,0,0,.18);touch-action:none}.puzzle-board canvas{position:absolute;inset:0;width:100%;height:100%;display:block}.puzzle-target,.puzzle-piece{position:absolute;width:42px;height:42px;border-radius:7px;box-sizing:border-box;pointer-events:auto;clip-path:polygon(0 18%,18% 18%,18% 0,82% 0,82% 18%,100% 18%,100% 82%,82% 82%,82% 100%,18% 100%,18% 82%,0 82%)}.puzzle-target{border:2px dashed rgba(255,255,255,.9);background:rgba(255,255,255,.12);box-shadow:0 0 0 1px rgba(0,0,0,.22) inset}.puzzle-piece{z-index:2;border:2px solid #fff;box-shadow:0 5px 14px rgba(0,0,0,.42);background-repeat:no-repeat;transform:translate3d(0,0,0);will-change:left,top;cursor:grab;touch-action:none}.puzzle-piece.dragging{cursor:grabbing;filter:brightness(1.08);box-shadow:0 7px 18px rgba(0,0,0,.5)}.puzzle-hint{height:19px;line-height:19px;text-align:center;font-size:10px;color:var(--text-dim);overflow:hidden;white-space:nowrap}.puzzle-status{height:15px;line-height:15px;text-align:center;font-size:10px;color:var(--text-dim);overflow:hidden}.puzzle-status.ok{color:var(--green)}.puzzle-status.bad{color:var(--red)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="loadingScreen" class="loading-wrap">
+    <div class="spinner"></div>
+    <div class="t">Loading…</div>
+  </div>
+
+  <div id="authScreen" class="auth-wrap hidden">
+    <div class="auth-card">
+      <div class="auth-logo">Guess<span>ino</span></div>
+      <div class="auth-sub" id="authSub">Sign in to continue</div>
+      <div id="authError" class="err-msg hidden"></div>
+      <div class="field"><label>Username</label><input id="authUsername" maxlength="16" placeholder="2 to 16 characters" autocomplete="username"></div>
+      <div class="field"><label>Password</label><input id="authPassword" type="password" maxlength="15" placeholder="3 to 15 characters" autocomplete="current-password"></div>
+      <div style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true" tabindex="-1">
+        <label for="authWebsite">Website</label>
+        <input id="authWebsite" name="website" type="text" tabindex="-1" autocomplete="off">
+      </div>
+      <div class="verify-wrap">
+        <label>Slide the piece into the matching cutout</label>
+        <div class="puzzle-wrap" id="puzzleCaptcha"><div class="puzzle-board" id="puzzleBoard"><canvas id="puzzleCanvas"></canvas><div class="puzzle-target" id="puzzleTarget"></div><div class="puzzle-piece" id="puzzlePiece"></div></div><div class="puzzle-hint">Drag the piece with your finger</div><div class="puzzle-status" id="puzzleStatus"></div></div>
+      </div>
+      <button class="btn btn-primary" id="authSubmitBtn">Log In</button>
+      <div class="switch-line" id="authSwitchLine">Don't have an account? <a href="#" id="authSwitchLink">Sign up</a></div>
+    </div>
+  </div>
+
+  <div id="banScreen" class="ban-wrap hidden">
+    <div class="ban-card">
+      <div class="ban-icon">🚫</div>
+      <h2>Account restricted</h2>
+      <p id="banTypeText"></p>
+      <p id="banReasonText"></p>
+      <p id="banUntilText"></p>
+      <button class="btn btn-ghost" id="banLogoutBtn">Back to Login</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://cacqqiysixpupfupqyvy.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_ewjtSc_Qg2ntxZpI9YfnMA_0XwuPF0y";
+let sb = null;
+try {
+  if (SUPABASE_URL && !SUPABASE_URL.includes("YOUR-PROJECT") && SUPABASE_URL.length > 8 && SUPABASE_ANON_KEY) {
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+} catch (e) { sb = null; }
+
+const $ = (id) => document.getElementById(id);
+let authMode = 'login';
+
+async function sha256(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+/* ---------- Strong device fingerprint (hard to bypass device ban) ---------- */
+function collectDeviceSignals(){
+  const nav = navigator || {};
+  const scr = window.screen || {};
+  const tz = (()=>{ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; }catch(e){ return ''; }})();
+  let canvasHash = '';
+  try{
+    const c = document.createElement('canvas');
+    c.width = 200; c.height = 50;
+    const ctx = c.getContext('2d');
+    if(ctx){
+      ctx.textBaseline = 'top';
+      ctx.font = '14px Arial';
+      ctx.fillStyle = '#f60';
+      ctx.fillRect(0,0,200,50);
+      ctx.fillStyle = '#069';
+      ctx.fillText('Guessino-FP-'+nav.language, 2, 2);
+      ctx.fillStyle = 'rgba(102,204,0,0.7)';
+      ctx.fillText('fp', 4, 20);
+      canvasHash = c.toDataURL().slice(-64);
+    }
+  }catch(e){}
+  return {
+    ua: (nav.userAgent || '').slice(0, 300),
+    platform: nav.platform || nav.userAgentData?.platform || '',
+    language: nav.language || '',
+    languages: (nav.languages || []).slice(0,5).join(','),
+    screen: (scr.width||0)+'x'+(scr.height||0)+'@'+(window.devicePixelRatio||1),
+    colorDepth: scr.colorDepth || 0,
+    timezone: tz,
+    cores: nav.hardwareConcurrency || 0,
+    memory: nav.deviceMemory || 0,
+    touch: ('ontouchstart' in window) || (nav.maxTouchPoints > 0),
+    maxTouch: nav.maxTouchPoints || 0,
+    vendor: nav.vendor || '',
+    canvas: canvasHash
+  };
+}
+
+async function hashFingerprint(str){
+  try{
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }catch(e){
+    // fallback simple hash
+    let h = 0;
+    for(let i=0;i<str.length;i++){ h = ((h<<5)-h)+str.charCodeAt(i); h|=0; }
+    return 'fb'+Math.abs(h).toString(16)+str.length.toString(16);
+  }
+}
+
+async function buildDeviceId(){
+  const sig = collectDeviceSignals();
+  // stable core signals (changing browser minor version shouldn't always reset)
+  const core = [
+    sig.platform, sig.language, sig.screen, sig.timezone,
+    String(sig.cores), String(sig.memory), String(sig.touch),
+    String(sig.maxTouch), sig.vendor, sig.canvas, sig.colorDepth
+  ].join('|');
+  const fp = await hashFingerprint(core);
+  // keep a local seed so even similar phones get unique id when possible
+  let seed = null;
+  try{ seed = localStorage.getItem('gz_device_seed'); }catch(e){}
+  if(!seed){
+    seed = (crypto.randomUUID ? crypto.randomUUID() : ('s'+Math.random().toString(36).slice(2)+Date.now()));
+    try{ localStorage.setItem('gz_device_seed', seed); }catch(e){}
+  }
+  const combined = await hashFingerprint(fp + '::' + seed);
+  try{ localStorage.setItem('gz_device_id', combined); }catch(e){}
+  return { id: combined, signals: sig, coreFp: fp };
+}
+
+let DEVICE_INFO = { id: null, signals: {}, coreFp: '' };
+let DEVICE_ID = null;
+
+async function initDevice(){
+  const built = await buildDeviceId();
+  DEVICE_INFO = built;
+  DEVICE_ID = built.id;
+  return built;
+}
+
+function getDeviceId(){
+  if(DEVICE_ID) return DEVICE_ID;
+  try{
+    const cached = localStorage.getItem('gz_device_id');
+    if(cached){ DEVICE_ID = cached; return cached; }
+  }catch(e){}
+  return 'unknown';
+}
+
+
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtDate(d){
+  if(!d) return '—';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('en-US') + ' ' + dt.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+
+function validateUsername(u){
+  if(u.length < 2 || u.length > 16) return 'Username must be 2-16 characters';
+  if(!/^[a-zA-Z0-9_]+$/.test(u)) return 'Only letters, numbers and underscore are allowed';
+  return null;
+}
+function validatePassword(p){
+  if(p.length < 3 || p.length > 15) return 'Password must be 3–15 characters';
+  return null;
+}
+
+function authErrorMessage(error, fallback){
+  if(!error) return fallback || 'Something went wrong. Please try again.';
+  const code=String(error.code||'');
+  const msg=String(error.message||'').toLowerCase();
+  if(code==='23505' || msg.includes('duplicate') || msg.includes('unique')) return 'This username is already taken.';
+  if(code==='42501' || msg.includes('row-level security') || msg.includes('permission denied')) return 'Database permission denied. Please check the Supabase policies.';
+  if(msg.includes('failed to fetch') || msg.includes('network') || msg.includes('fetch')) return 'Connection failed. Check your internet connection and try again.';
+  if(msg.includes('timeout')) return 'Server took too long to respond. Please try again.';
+  return error.message || fallback || 'Something went wrong. Please try again.';
+}
+
+async function withTimeout(promise, ms){
+  let timer;
+  try{
+    return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('timeout')),ms)})]);
+  }finally{clearTimeout(timer);}
+}
+
+
+
+async function getActiveDeviceBan(){
+  const { data: devBan } = await sb.from('banned_devices').select('*').eq('device_id', DEVICE_ID).maybeSingle();
+  if(devBan && (!devBan.banned_until || new Date(devBan.banned_until) > new Date())) return devBan;
+  return null;
+}
+
+function hideAllScreens(){
+  ['loadingScreen','authScreen','banScreen'].forEach(id=>{ const el=$(id); if(el) el.classList.add('hidden'); });
+}
+function showLoading(){
+  hideAllScreens();
+  $('loadingScreen').classList.remove('hidden');
+}
+function showAuth(mode){
+  hideAllScreens();
+  authMode = mode || 'login';
+  $('authScreen').classList.remove('hidden');
+  $('authError').classList.add('hidden');
+  $('authSubmitBtn').textContent = authMode === 'login' ? 'Log In' : 'Sign Up';
+  $('authSub').textContent = authMode === 'login' ? 'Sign in to continue' : 'Create a new account';
+  $('authSwitchLine').innerHTML = authMode === 'login'
+    ? `Don't have an account? <a href="#" id="authSwitchLink">Sign up</a>`
+    : `Already have an account? <a href="#" id="authSwitchLink">Log in</a>`;
+  const link = $('authSwitchLink');
+  if(link) link.onclick = (e)=>{ e.preventDefault(); showAuth(authMode === 'login' ? 'signup' : 'login'); };
+}
+function showDeviceBanScreen(devBan){
+  hideAllScreens();
+  $('banScreen').classList.remove('hidden');
+  $('banTypeText').textContent = 'Device ban';
+  $('banReasonText').textContent = (devBan && devBan.reason) || 'No reason';
+  $('banUntilText').textContent = (devBan && devBan.banned_until) ? fmtDate(devBan.banned_until) : 'Permanent';
+}
+function showUserBanScreen(user){
+  hideAllScreens();
+  $('banScreen').classList.remove('hidden');
+  $('banTypeText').textContent = (user.ban_type === 'device') ? 'Device ban' : 'Account ban';
+  $('banReasonText').textContent = user.ban_reason || 'No reason';
+  $('banUntilText').textContent = user.ban_until ? fmtDate(user.ban_until) : 'Permanent';
+}
+function goHome(){
+  try {
+    var path = location.pathname || '/';
+    if (/\/index\.html$/i.test(path)) path = path.replace(/\/index\.html$/i, '/');
+    else if (!path.endsWith('/')) path = path + '/';
+    // /REPO/home/login/ → /REPO/home/app/
+    path = path.replace(/\/login\/$/, '/');
+    location.replace(path + 'app/');
+  } catch (e) {
+    location.replace('../app/');
+  }
+}
+
+async function registerCurrentDevice(userId){
+  if(!sb || !userId || !DEVICE_ID) return;
+  try{
+    const { data: existing } = await sb.from('devices').select('id').eq('user_id', userId).eq('device_id', DEVICE_ID).maybeSingle();
+    if(existing){
+      await sb.from('devices').update({ last_seen: new Date().toISOString(), revoked: false }).eq('id', existing.id);
+    } else {
+      await sb.from('devices').insert({
+        user_id: userId, device_id: DEVICE_ID, last_seen: new Date().toISOString(), revoked: false
+      });
+    }
+  }catch(e){ console.warn(e); }
+}
+
+async function finishLogin(user){
+  if(user.banned && user.ban_until && new Date(user.ban_until) <= new Date()){
+    const { data: updated } = await sb.from('users').update({
+      banned:false, ban_type:null, ban_reason:null, ban_until:null, banned_at:null
+    }).eq('id', user.id).select().single();
+    if(updated) user = updated;
+  }
+  if(user.banned){ showUserBanScreen(user); return; }
+  localStorage.setItem('gz_user_id', user.id);
+  await registerCurrentDevice(user.id);
+  goHome();
+}
+
+
+/* ---------- Compact drag puzzle CAPTCHA ---------- */
+let PUZZLE={x:0,y:0,targetX:0,targetY:0,size:42,drag:false,offX:0,offY:0,solved:false,started:0,moved:0,moveEvents:0,lastX:0,lastY:0,dirChanges:0,lastDir:0};
+function puzzleRand(a,b){return Math.floor(Math.random()*(b-a+1))+a}function puzzleStatus(t,c=''){const e=$('puzzleStatus');if(e){e.textContent=t||'';e.className='puzzle-status'+(c?' '+c:'')}}
+function puzzleMakeImage(){const b=$('puzzleBoard'),c=$('puzzleCanvas'),p=$('puzzlePiece'),t=$('puzzleTarget');if(!b||!c||!p||!t)return;const w=Math.max(220,b.clientWidth),h=118,s=puzzleRand(38,48);PUZZLE.size=s;c.width=w*2;c.height=h*2;const x=c.getContext('2d');x.setTransform(2,0,0,2,0,0);const palettes=[['#172554','#0f766e','#7c3aed'],['#3f1d2e','#164e63','#854d0e'],['#172033','#3f6212','#7e22ce'],['#1e293b','#075985','#9f1239']];const q=palettes[Math.floor(Math.random()*palettes.length)],g=x.createLinearGradient(0,0,w,h);g.addColorStop(0,q[0]);g.addColorStop(.5,q[1]);g.addColorStop(1,q[2]);x.fillStyle=g;x.fillRect(0,0,w,h);for(let i=0;i<45;i++){x.fillStyle='rgba(255,255,255,'+(Math.random()*.07)+')';x.beginPath();x.arc(Math.random()*w,Math.random()*h,2+Math.random()*16,0,Math.PI*2);x.fill()}const minX=8,maxX=Math.max(8,w-s-8),minY=8,maxY=Math.max(8,h-s-8);PUZZLE.targetX=puzzleRand(minX,maxX);PUZZLE.targetY=puzzleRand(minY,maxY);let px=puzzleRand(minX,maxX),py=puzzleRand(minY,maxY);for(let i=0;i<10&&Math.hypot(px-PUZZLE.targetX,py-PUZZLE.targetY)<70;i++){px=puzzleRand(minX,maxX);py=puzzleRand(minY,maxY)}PUZZLE.x=px;PUZZLE.y=py;PUZZLE.solved=false;PUZZLE.drag=false;PUZZLE.started=0;PUZZLE.moved=0;PUZZLE.moveEvents=0;PUZZLE.dirChanges=0;PUZZLE.lastDir=0;PUZZLE.lastX=px;PUZZLE.lastY=py;t.style.left=PUZZLE.targetX+'px';t.style.top=PUZZLE.targetY+'px';const o=document.createElement('canvas');o.width=s;o.height=s;o.getContext('2d').drawImage(c,PUZZLE.targetX*2,PUZZLE.targetY*2,s*2,s*2,0,0,s,s);p.style.width=s+'px';p.style.height=s+'px';p.style.backgroundImage='url('+o.toDataURL('image/png')+')';p.style.top=py+'px';puzzleSetX(px);puzzleStatus('')}
+function puzzleSetPos(x,y){const b=$('puzzleBoard'),p=$('puzzlePiece');if(!b||!p)return;const maxX=Math.max(0,b.clientWidth-PUZZLE.size),maxY=Math.max(0,b.clientHeight-PUZZLE.size);PUZZLE.x=Math.max(0,Math.min(maxX,x));PUZZLE.y=Math.max(0,Math.min(maxY,y));p.style.left=PUZZLE.x+'px';p.style.top=PUZZLE.y+'px'}
+function puzzleSetX(v){puzzleSetPos(v,PUZZLE.y)}
+function puzzleDown(e){const p=$('puzzlePiece');if(!p||PUZZLE.solved)return;const r=p.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)return;e.preventDefault();PUZZLE.drag=true;PUZZLE.started=performance.now();PUZZLE.offX=e.clientX-r.left;PUZZLE.offY=e.clientY-r.top;PUZZLE.moved=0;PUZZLE.moveEvents=0;PUZZLE.dirChanges=0;PUZZLE.lastDir=0;PUZZLE.lastX=PUZZLE.x;PUZZLE.lastY=PUZZLE.y;p.classList.add('dragging');try{p.setPointerCapture(e.pointerId)}catch(_){} }
+function puzzleMove(e){if(!PUZZLE.drag)return;e.preventDefault();const r=$('puzzleBoard').getBoundingClientRect(),nx=e.clientX-r.left-PUZZLE.offX,ny=e.clientY-r.top-PUZZLE.offY;const dx=nx-PUZZLE.lastX;PUZZLE.moved+=Math.hypot(nx-PUZZLE.x,ny-PUZZLE.y);PUZZLE.moveEvents++;if(Math.abs(dx)>0.4){const dir=dx>0?1:-1;if(PUZZLE.lastDir&&dir!==PUZZLE.lastDir)PUZZLE.dirChanges++;PUZZLE.lastDir=dir}PUZZLE.lastX=nx;PUZZLE.lastY=ny;puzzleSetPos(nx,ny)}
+function puzzleUp(){if(PUZZLE.drag){PUZZLE.drag=false;const p=$('puzzlePiece');if(p)p.classList.remove('dragging')}}
+function resetPuzzleCaptcha(){ puzzleMakeImage(); }
+function checkPuzzleCaptcha(){if(PUZZLE.solved)return null;if(!PUZZLE.started||PUZZLE.moved<20||PUZZLE.moveEvents<6){puzzleStatus('Drag the piece with your finger.','bad');return 'Please complete the puzzle verification'}const elapsed=performance.now()-PUZZLE.started;if(elapsed<220||elapsed>60000){puzzleStatus('Please move the piece naturally.','bad');resetPuzzleCaptcha();return 'Please try the puzzle again'}const dx=PUZZLE.x-PUZZLE.targetX,dy=PUZZLE.y-PUZZLE.targetY;if(Math.hypot(dx,dy)<=9){PUZZLE.solved=true;puzzleSetPos(PUZZLE.targetX,PUZZLE.targetY);puzzleStatus('Verified ✓','ok');return null}puzzleStatus('Wrong position — try again.','bad');resetPuzzleCaptcha();return 'Puzzle verification failed — try again'}
+/* ---------- Anti-bot ---------- */
+const AUTH_OPENED_AT = Date.now();
+const MIN_FORM_MS = 2500;
+const MAX_ACCOUNTS_PER_DEVICE_24H = 2;
+const MAX_ACCOUNTS_PER_DEVICE_TOTAL = 4;
+
+async function logAntiBot(action, details){
+  if(!sb) return;
+  try{
+    await sb.from('audit_log').insert({
+      actor_id: null,
+      actor_username: 'SYSTEM',
+      action: action || 'anti_bot',
+      target_username: details && details.username || null,
+      target_device_id: DEVICE_ID || null,
+      details: Object.assign({ source: 'signup' }, details || {})
+    });
+  }catch(e){ console.warn('anti_bot log', e); }
+}
+
+async function deleteUserHard(userId){
+  if(!sb || !userId) return;
+  try{
+    // best-effort cleanup
+    await sb.from('devices').delete().eq('user_id', userId);
+    await sb.from('users').delete().eq('id', userId);
+  }catch(e){ console.warn('delete user', e); }
+}
+
+async function countDeviceAccounts(){
+  if(!sb || !DEVICE_ID) return { day: 0, total: 0 };
+  try{
+    const since = new Date(Date.now() - 24*60*60*1000).toISOString();
+    const { data: all } = await sb.from('users').select('id,created_at').eq('device_id', DEVICE_ID);
+    const rows = all || [];
+    const day = rows.filter(u => u.created_at && u.created_at >= since).length;
+    return { day, total: rows.length };
+  }catch(e){
+    return { day: 0, total: 0 };
+  }
+}
+
+async function runAntiBotGates(username, isSignup){
+  // 0) honeypot field — only bots fill hidden inputs
+  const hp = $('authWebsite');
+  if(hp && hp.value){
+    await logAntiBot('anti_bot', { username, reason: 'honeypot_filled' });
+    return 'Please try again.';
+  }
+  // 1) too fast (bot)
+  if(Date.now() - AUTH_OPENED_AT < MIN_FORM_MS){
+    await logAntiBot('anti_bot', { username, reason: 'form_too_fast', ms: Date.now()-AUTH_OPENED_AT });
+    return 'Please wait a moment and try again.';
+  }
+  // 3) device already banned
+  try{
+    const ban = await getActiveDeviceBan();
+    if(ban){
+      return 'This device is restricted.';
+    }
+  }catch(e){}
+
+  if(isSignup){
+    const counts = await countDeviceAccounts();
+    if(counts.day >= MAX_ACCOUNTS_PER_DEVICE_24H || counts.total >= MAX_ACCOUNTS_PER_DEVICE_TOTAL){
+      await logAntiBot('anti_bot_block_device', {
+        username,
+        reason: 'mass_signup',
+        accounts_24h: counts.day,
+        accounts_total: counts.total
+      });
+      return 'Registration temporarily blocked on this device.';
+    }
+  }
+  return null;
+}
+
+async function submitAuth(){
+  const username = ($('authUsername').value || '').trim();
+  const password = $('authPassword').value || '';
+  const errBox = $('authError');
+  const btn = $('authSubmitBtn');
+  errBox.classList.add('hidden');
+
+  const uErr = validateUsername(username);
+  if(uErr){ errBox.textContent=uErr; errBox.classList.remove('hidden'); return; }
+  const pErr = validatePassword(password);
+  if(pErr){ errBox.textContent=pErr; errBox.classList.remove('hidden'); return; }
+
+  const vErr = checkPuzzleCaptcha();
+  if(vErr){ errBox.textContent=vErr; errBox.classList.remove('hidden'); return; }
+  if(!sb){ errBox.textContent='Database is not connected. Please check your internet connection.'; errBox.classList.remove('hidden'); return; }
+
+  btn.disabled = true;
+  try{
+    const botMsg = await withTimeout(runAntiBotGates(username, authMode === 'signup'), 6000);
+    if(botMsg){
+      errBox.textContent = botMsg;
+      errBox.classList.remove('hidden');
+      resetPuzzleCaptcha();
+      return;
+    }
+
+    const hash = await sha256(password);
+
+    if(authMode === 'signup'){
+      const lookup = await withTimeout(
+        sb.from('users').select('id').ilike('username', username).maybeSingle(), 8000
+      );
+      if(lookup.error) throw lookup.error;
+      if(lookup.data){
+        errBox.textContent='This username is already taken.';
+        errBox.classList.remove('hidden');
+        resetPuzzleCaptcha();
+        return;
+      }
+
+      const result = await withTimeout(sb.from('users').insert({
+        username: username,
+        password_hash: hash,
+        device_id: DEVICE_ID
+      }).select().single(), 10000);
+      if(result.error) throw result.error;
+      const newUser=result.data;
+
+      const counts = await withTimeout(countDeviceAccounts(), 6000);
+      if(counts.day > MAX_ACCOUNTS_PER_DEVICE_24H || counts.total > MAX_ACCOUNTS_PER_DEVICE_TOTAL){
+        await deleteUserHard(newUser.id);
+        await logAntiBot('anti_bot_delete_user', {username,reason:'post_signup_limit',target_user_id:newUser.id,accounts_24h:counts.day,accounts_total:counts.total});
+        errBox.textContent='Registration blocked on this device.';
+        errBox.classList.remove('hidden');
+        resetPuzzleCaptcha();
+        return;
+      }
+
+      await logAntiBot('signup', {username,user_id:newUser.id,note:'ok'});
+      await finishLogin(newUser);
+    }else{
+      const result = await withTimeout(
+        sb.from('users').select('*').ilike('username', username).maybeSingle(), 8000
+      );
+      if(result.error) throw result.error;
+      const user=result.data;
+      if(!user){
+        errBox.textContent='Username not found.';
+        errBox.classList.remove('hidden');
+        resetPuzzleCaptcha();
+        return;
+      }
+      if(user.password_hash !== hash){
+        errBox.textContent='Incorrect password.';
+        errBox.classList.remove('hidden');
+        resetPuzzleCaptcha();
+        return;
+      }
+      await finishLogin(user);
+    }
+  }catch(e){
+    console.error('Authentication error:',e);
+    errBox.textContent=authErrorMessage(e,'Unable to complete the request. Please try again.');
+    errBox.classList.remove('hidden');
+    resetPuzzleCaptcha();
+  }finally{
+    btn.disabled=false;
+  }
+}
+
+$('authSubmitBtn').onclick = ()=> submitAuth();
+['authUsername','authPassword'].forEach(id=>{
+  const el=$(id); if(el) el.addEventListener('keydown', e=>{ if(e.key==='Enter') submitAuth(); });
+});
+$('banLogoutBtn').onclick = ()=>{ localStorage.removeItem('gz_user_id'); showAuth('login'); };
+
+async function boot(){
+  showLoading();
+  let finished=false;
+  const forceOpen=setTimeout(()=>{
+    if(!finished){
+      finished=true;
+      showAuth('login');
+      const e=$('authError');
+      e.textContent='Connection is taking too long. You can try logging in again.';
+      e.classList.remove('hidden');
+    }
+  },4500);
+
+  try{
+    if(!sb){
+      finished=true;
+      showAuth('login');
+      $('authError').textContent='Database is not connected. Please check your connection.';
+      $('authError').classList.remove('hidden');
+      return;
+    }
+
+    try{ await withTimeout(initDevice(),1800); }
+    catch(e){
+      console.warn('Device initialization failed:',e);
+      DEVICE_ID=getDeviceId();
+    }
+
+    try{
+      const devBan=await withTimeout(getActiveDeviceBan(),2500);
+      if(devBan){ finished=true; showDeviceBanScreen(devBan); return; }
+    }catch(e){ console.warn('Device ban check skipped:',e); }
+
+    const savedId=localStorage.getItem('gz_user_id');
+    if(savedId){
+      try{
+        const result=await withTimeout(sb.from('users').select('*').eq('id',savedId).maybeSingle(),2500);
+        if(!result.error && result.data){
+          finished=true;
+          if(result.data.banned){ showUserBanScreen(result.data); return; }
+          goHome();
+          return;
+        }
+      }catch(e){ console.warn('Saved session check failed:',e); }
+      localStorage.removeItem('gz_user_id');
+    }
+
+    finished=true;
+    showAuth('login');
+  }catch(e){
+    console.error('Boot error:',e);
+    localStorage.removeItem('gz_user_id');
+    finished=true;
+    showAuth('login');
+  }finally{
+    clearTimeout(forceOpen);
+  }
+}
+
+(function bindPuzzleUI(){const p=$('puzzlePiece');if(p&&!p._bound){p._bound=true;p.addEventListener('pointerdown',puzzleDown,{passive:false});p.addEventListener('pointermove',puzzleMove,{passive:false});p.addEventListener('pointerup',puzzleUp,{passive:false});p.addEventListener('pointercancel',puzzleUp,{passive:false})}window.addEventListener('resize',()=>{if($('puzzleCaptcha')&&!$('authScreen').classList.contains('hidden'))puzzleMakeImage()});requestAnimationFrame(()=>requestAnimationFrame(()=>{if($('puzzleCaptcha'))puzzleMakeImage()}))})();
+
+boot();
+</script>
+</body>
+</html>
