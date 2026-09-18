@@ -1,6 +1,26 @@
-<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Banana</title></head>
-<body><script>
-const p=location.pathname.replace(/^\/+|\/+$/g,'');
-if(p==='login'||p==='home'||p==='') location.replace(location.origin+location.pathname.replace(/[^/]*$/,'')+(p==='home'?'app.html':'login.html'));
-else location.replace(location.origin+location.pathname.replace(/[^/]*$/,'')+'login.html');
+<!doctype html><html lang="fa" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Banana Messenger</title></head><body>
+<script>
+(async()=>{
+ const p=location.pathname.replace(/\/+$/,'');
+ const base=p.substring(0,p.lastIndexOf('/')+1);
+ const route=p.substring(p.lastIndexOf('/')+1);
+ const file=route==='login'?'login.html':route==='home'?'app.html':null;
+ if(!file){location.replace(base+'login');return}
+ try{
+   const r=await fetch(base+file,{cache:'no-store'});
+   if(!r.ok) throw new Error();
+   const html=await r.text();
+   const d=new DOMParser().parseFromString(html,'text/html');
+   document.head.innerHTML=d.head.innerHTML;
+   document.body.innerHTML=d.body.innerHTML;
+   d.querySelectorAll('script').forEach(s=>{
+     const x=document.createElement('script');
+     if(s.src)x.src=new URL(s.getAttribute('src'),location.href).href;
+     else x.textContent=s.textContent;
+     document.body.appendChild(x);
+   });
+ }catch(e){document.body.innerHTML='<div style="font-family:system-ui;text-align:center;padding:40px"><h2>Banana</h2><p>خطا در بارگذاری صفحه</p><a href="'+base+'login">ورود</a></div>'}
+})();
 </script></body></html>
